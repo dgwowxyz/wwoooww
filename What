@@ -4939,7 +4939,7 @@
 
                     themes.preset.textsize = int
                 end})
-                Section:Slider({Name = "Blur Intensity", Default = 14, Decimal = 1, Min = 1, Max = 100, Flag = "BlurSize", Callback = function(int)
+                Section:Slider({Name = "Blur Intensity", Default = 1, Decimal = 1, Min = 1, Max = 100, Flag = "BlurSize", Callback = function(int)
                     if Window.Items.Holder.Visible then 
                         Library.Blur.Size = int
                     end 
