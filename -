@@ -5263,8 +5263,7 @@
 
             return setmetatable(Cfg, Library)
         end 
-    -- 
-
+-- Esp Library Section  
         local MiscOptions = {
             ["Enabled"] = false;
             ["Render Distance"] = 10000; 
@@ -5402,6 +5401,12 @@
         end 
 
         function Library:AddTab(properties)
+            -- OptionsTarget lets the caller route this tab's writes to a
+            -- different proxy (e.g. AiOptions). All AddBar/AddText/AddBox
+            -- callbacks close over the local `Options` variable, so
+            -- shadowing it here routes every write automatically.
+            local Options = properties.OptionsTarget or Options
+
             local Cfg = {
                 Name = properties.Name;
                 Items = {};
