@@ -5265,7 +5265,6 @@
         end 
     -- 
 
-    -- Esp Library Section  
         local MiscOptions = {
             ["Enabled"] = false;
             ["Render Distance"] = 10000; 
@@ -5315,7 +5314,20 @@
             ["Distance_Text_Size"] = 12;
         };  
 
-        local Options = setmetatable({}, {__index = MiscOptions, __newindex = function(self, key, value) MiscOptions[key] = value Esp.RefreshElements(key, value) end});
+        local Options = setmetatable({}, {__index = MiscOptions, __newindex = function(self, key, value) MiscOptions[key] = value Esp.RefreshElements(key, value, "player") end});
+
+    -- AI has its own independent options table — changes never bleed into player ESP
+    local AiMiscOptions = {}
+    for k, v in MiscOptions do AiMiscOptions[k] = v end
+    AiMiscOptions["Enabled"]          = false
+    AiMiscOptions["Chams Fill"]       = { Color = Color3.fromRGB(255, 100, 0),  Transparency = 0.9 }
+    AiMiscOptions["Chams Outline"]    = { Color = Color3.fromRGB(255, 30,  30), Transparency = 0.4 }
+    AiMiscOptions["Box Gradient 1"]   = { Color = Color3.fromRGB(255, 100, 0),  Transparency = 0.9 }
+    AiMiscOptions["Box Gradient 2"]   = { Color = Color3.fromRGB(255, 30,  30), Transparency = 0.4 }
+    AiMiscOptions["Healthbar_Low"]    = { Color = Color3.fromRGB(255, 30,  30), Transparency = 1   }
+    AiMiscOptions["Healthbar_Medium"] = { Color = Color3.fromRGB(255, 165, 0),  Transparency = 1   }
+    AiMiscOptions["Healthbar_High"]   = { Color = Color3.fromRGB(50,  220, 50), Transparency = 1   }
+    local AiOptions = setmetatable({}, {__index = AiMiscOptions, __newindex = function(self, key, value) AiMiscOptions[key] = value Esp.RefreshElements(key, value, "ai") end});
 
         function Library:EspPreview(properties)
             local Cfg = {
@@ -7389,6 +7401,7 @@
 
     getgenv().Esp = { 
         Players = {}, 
+        Ai = {},
         PlayersOptions = {},
         ScreenGui = Instance.new("ScreenGui", CoreGui), 
         Cache = Instance.new("ScreenGui", gethui()), 
@@ -8254,104 +8267,62 @@
                 end)
             end 
 
-            Esp.Players[ player.Name ] = Data
+            if typechar == "ai" then
+                Esp.Ai[ player.Name ] = Data
+            else
+                Esp.Players[ player.Name ] = Data
+            end
 
             return Data
         end
 
         function Esp.Update() -- IMPORTANT! 
-            if not Esp then 
-                return 
-            end 
+            if not Esp then return end 
 
-            if not MiscOptions.Enabled then
-                return 
-            end 
-
-            for _,Data in Esp.Players do
-                if not Data.Info then
-                    continue 
-                end 
-            
-                local Character = Data.Info.Character
-
-                if not Character then 
-                    continue 
-                end 
-
-                local Humanoid = Data.Info.Humanoid 
-
-                if not Humanoid then
-                    continue 
-                end 
-
-                if not (Character or Humanoid) then 
-                    continue 
-                end 
-                
-                local Items = Data and Data.Items 
-
-                if not Items then 
-                    continue 
-                end 
-
-                local BoxSize, BoxPos, OnScreen, Distance = Esp:BoxSolve(Humanoid.RootPart)
-                local Holder = Items["Holder"]
-                
-                if not (Holder or MiscOptions["Render Distance"]) then 
-                    continue 
+            local function UpdatePool(pool, opts)
+                if not opts.Enabled then return end
+                for _,Data in pool do
+                    if not Data.Info then continue end
+                    local Character = Data.Info.Character
+                    if not Character then continue end
+                    local Humanoid = Data.Info.Humanoid
+                    if not Humanoid then continue end
+                    local Items = Data and Data.Items
+                    if not Items then continue end
+                    local BoxSize, BoxPos, OnScreen, Distance = Esp:BoxSolve(Humanoid.RootPart)
+                    local Holder = Items["Holder"]
+                    if not (Holder and opts["Render Distance"]) then continue end
+                    if Distance == nil then
+                        if Holder.Visible then Holder.Visible = false end
+                        continue
+                    end
+                    if Distance > opts["Render Distance"] and Holder.Visible then
+                        Holder.Visible = false
+                        continue
+                    end
+                    if Holder.Visible ~= OnScreen and not (Distance > opts["Render Distance"]) then
+                        Holder.Visible = OnScreen
+                    end
+                    if not OnScreen then continue end
+                    local Pos = dim_offset(BoxPos.X, BoxPos.Y)
+                    if Pos ~= Holder.Position then Holder.Position = Pos end
+                    local Size = dim2(0, BoxSize.X, 0, BoxSize.Y)
+                    if Size ~= Holder.Size then Holder.Size = Size end
+                    local DistanceLabel = Items.Distance
+                    local Text = tostring(math.round(Distance)) .. "m"
+                    if DistanceLabel.Text ~= Text then DistanceLabel.Text = Text end
                 end
-
-                -- some exploits may be using ways to delete and break the box solve, prevents that
-                if Distance == nil then 
-                    if Holder.Visible then 
-                        Holder.Visible = false 
-                    end 
-
-                    continue
-                end 
-
-                if Distance > MiscOptions["Render Distance"] and Holder.Visible then 
-                    Holder.Visible = false 
-                    continue 
-                end 
-
-                if Holder.Visible ~= OnScreen and not (Distance > MiscOptions["Render Distance"]) then 
-                    Holder.Visible = OnScreen
-                end 
-
-                if not OnScreen then
-                    continue
-                end 
-
-                local Pos = dim_offset(BoxPos.X, BoxPos.Y)
-                if Pos ~= Holder.Position then 
-                    Holder.Position = Pos
-                end 
-                
-                local Size = dim2(0, BoxSize.X, 0, BoxSize.Y)
-                if Size ~= Holder.Size then 
-                    Holder.Size = Size
-                end 
-
-                local DistanceLabel = Items.Distance
-                local Text = tostring( math.round(Distance) )  .. "m"
-                if DistanceLabel.Text ~= Text then 
-                    DistanceLabel.Text = Text
-                end 
-                
-                -- if Options["Box Fill"] and Options["Box Spin"] then 
-                --     Items["Holder_gradient"].Rotation += Options["Box Spin Speed"] / 100
-                -- end
-
-                -- if Options["Box Gradient"] and Options["Box Gradient Spin"] then 
-                --     Items["box_outline_gradient"].Rotation += Options["Box Gradient Spin Speed"] / 100
-                -- end
             end
+
+            UpdatePool(Esp.Players, MiscOptions)
+            UpdatePool(Esp.Ai, AiMiscOptions)
         end 
         
-        function Esp.RefreshElements(key, value) -- IMPORTANT!                  
-            for _,Data in Esp.Players do
+        function Esp.RefreshElements(key, value, pool) -- IMPORTANT!                  
+            local TargetPool = (pool == "ai") and Esp.Ai or Esp.Players
+            local TargetMiscOptions = (pool == "ai") and AiMiscOptions or MiscOptions
+
+            for _,Data in TargetPool do
                 local Items = Data and Data.Items 
 
                 -- These checks are so annoying
@@ -8624,6 +8595,12 @@
                 Esp.RemovePlayer(player)
             end
 
+            -- Clean up AI objects
+            for name, data in Esp.Ai do
+                if data and data.Destroy then data.Destroy() end
+            end
+            table.clear(Esp.Ai)
+
             for _,connection in Esp.Connections do 
                 connection:Disconnect() 
                 connection = nil
@@ -8648,9 +8625,17 @@
                 Path.Destroy()
             end
         end
+
+        function Esp.RemoveAi(name)
+            local Path = Esp.Ai[name]
+            if Path then
+                Path.Destroy()
+                Esp.Ai[name] = nil
+            end
+        end
     end
 
     Esp.Loop = RunService:BindToRenderStep("Run Loop", 400, Esp.Update)
 -- 
 
-return Library, Esp, MiscOptions, Options 
+return Library, Esp, MiscOptions, Options, AiMiscOptions, AiOptions
