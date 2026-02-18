@@ -9,7 +9,7 @@
 
 -- Library init
     getgenv().Library = {
-        Directory = "octo",
+        Directory = "radium",
         Folders = {
             "/fonts",
             "/configs",
@@ -31,13 +31,13 @@
         preset = {
             inline = rgb(46, 46, 46),
             outline = rgb(10, 10, 15),
-            accent = rgb(164, 132, 255),
+            accent = rgb(255, 0, 0),
             background = rgb(0, 0, 0),              
             misc_1 = rgb(0, 0, 0),
-            text_color = rgb(164, 132, 255),
+            text_color = rgb(255, 0, 0),
             unselected = rgb(255, 255, 255),
             tooltip = rgb(73, 73, 73),
-            misc_2 = rgb(23, 23, 28),
+            misc_2 = rgb(0, 0, 0),
             font = "ProggyClean",
             textsize = 12
         },
@@ -1998,8 +1998,8 @@
                 if Tick - Cfg.Tick >= 1 then 
                     Cfg.Tick = Tick
 
-                    local Uid = 1
-                    local Status = "Developer"
+                    local Uid = 0
+                    local Status = "private"
                     local Ping = math.floor(Stats.PerformanceStats.Ping:GetValue())
                     Cfg.ChangeWatermarkTitle(string.format('%s <font color = "%s">/ UID %s / %s / %s / %sfps / %sms</font>', Cfg.Name, Library:ConvertHex(themes.preset.text_color), Uid, Status, os.date("%x / %X"), Cfg.Fps, Ping))
 
