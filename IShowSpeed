@@ -34,14 +34,3 @@ else
     -- Already running, just update speed
     SpinBot.Speed = newSpeed
 end
-
--- GUI TOGGLE ONLY
-movSection:Toggle({
-    Name = "IShowSpeed",
-    Flag = "gwab2",
-    Default = false,
-    Callback = function(v)
-        SpinBot.Enabled = v
-        hum.AutoRotate = not v
-    end
-})
