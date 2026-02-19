@@ -1,0 +1,76 @@
+-- ────────────────────────────────────────────────────────────
+-- LOCAL SPINBOT SETUP
+-- ────────────────────────────────────────────────────────────
+
+-- Use your service globals
+local Players          = Players
+local RunService       = RunService
+local UserInputService = UserInputService
+local Workspace        = Workspace
+local LocalPlayer      = LocalPlayer
+
+-- Local SpinBot table
+local SpinBot = {}
+SpinBot.Speed   = 5      -- default spin speed
+SpinBot.Enabled = false
+SpinBot.Angle   = 0
+SpinBot.Running = false
+SpinBot.Connection = nil
+
+-- Function to setup character references safely
+local function SetupCharacter(char)
+    SpinBot.Character = char
+    SpinBot.Root = char:WaitForChild("HumanoidRootPart")
+    SpinBot.Humanoid = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid")
+
+    SpinBot.OriginalAutoRotate = SpinBot.Humanoid.AutoRotate
+    SpinBot.Humanoid.AutoRotate = false
+end
+
+-- Initial character
+if LocalPlayer.Character then
+    SetupCharacter(LocalPlayer.Character)
+end
+
+-- Handle respawn
+LocalPlayer.CharacterAdded:Connect(SetupCharacter)
+
+-- Initialize SpinBot loop
+if not SpinBot.Running then
+    SpinBot.Running = true
+
+    SpinBot.Connection = RunService.RenderStepped:Connect(function(delta)
+        if SpinBot.Enabled and SpinBot.Root and SpinBot.Root.Parent then
+            SpinBot.Angle = SpinBot.Angle + SpinBot.Speed * delta
+            SpinBot.Root.CFrame = CFrame.new(SpinBot.Root.Position) * CFrame.Angles(0, SpinBot.Angle, 0)
+        end
+    end)
+end
+
+-- ────────────────────────────────────────────────────────────
+-- GUI INTEGRATION
+-- ────────────────────────────────────────────────────────────
+
+movSection:Toggle({
+    Name     = "IShowSpeed",
+    Flag     = "gwab2",
+    Default  = false,
+    Callback = function(v)
+        SpinBot.Enabled = v
+        if SpinBot.Humanoid then
+            SpinBot.Humanoid.AutoRotate = not v
+        end
+    end
+})
+
+movSection:Slider({
+    Name     = "Spin Speed",
+    Flag     = "justspeen",
+    Min      = 1,
+    Max      = 50,
+    Decimal  = 0.1,
+    Default  = 5,
+    Callback = function(v)
+        SpinBot.Speed = v
+    end
+})
