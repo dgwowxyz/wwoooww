@@ -1,14 +1,3 @@
--- ────────────────────────────────────────────────────────────
--- LOCAL SPINBOT SETUP
--- ────────────────────────────────────────────────────────────
-
--- Use your service globals
-local Players          = Players
-local RunService       = RunService
-local UserInputService = UserInputService
-local Workspace        = Workspace
-local LocalPlayer      = LocalPlayer
-
 -- Local SpinBot table
 local SpinBot = {}
 SpinBot.Speed   = 5      -- default spin speed
