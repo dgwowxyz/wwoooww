@@ -101,6 +101,8 @@ local Library; do
 	}
 	Library.__index = Library
 
+local createSection, createColumn, createPage
+
 local Themes = {
 	Accent = RGB(255, 174, 82),
 	Background = RGB(38, 35, 35),
@@ -642,7 +644,7 @@ function Library:CreateWindow(data)
 	return Cfg
 end
 
-local function createSection(parent)
+createSection = function(parent)
 	local section_self = {
 		Items = {},
 		Elements = {},
@@ -1482,7 +1484,7 @@ local function createSection(parent)
 	return section_self
 end
 
-local function createColumn(parent)
+createColumn = function(parent)
 	local col = create("Frame", {
 		Parent = parent,
 		Name = "column",
@@ -1515,7 +1517,7 @@ local function createColumn(parent)
 	return col_cfg
 end
 
-local function createPage(parent, tabPage)
+createPage = function(parent, tabPage)
 	local page = create("Frame", {
 		Parent = tabPage or parent,
 		Name = "page",
@@ -1572,6 +1574,74 @@ function Library:Unload()
 	Library = nil
 	getgenv().Library = nil
 end
+
+-- Example usage
+local Window = Library:CreateWindow({
+	Title = "My UI",
+})
+
+local MainTab = Window:AddTab({
+	Text = "Main",
+})
+
+local Col1 = MainTab:AddColumn()
+
+local Combat = Col1:AddSection("Combat")
+Combat:AddToggle({
+	Text = "Aimbot",
+	Flag = "aimbot",
+	Default = true,
+})
+Combat:AddToggle({
+	Text = "ESP",
+	Flag = "esp",
+	ColorPicker = {Default = RGB(255, 0, 0)},
+	KeyPicker = {Default = "RMB"},
+})
+Combat:AddButton({
+	Text = "Click Me",
+	Callback = function()
+		Window:Notify("Button was clicked!", 2)
+	end,
+})
+
+local Col2 = MainTab:AddColumn()
+
+local Visuals = Col2:AddSection("Visuals")
+Visuals:AddLabel("Hello World")
+Visuals:AddSlider({
+	Text = "FOV",
+	Flag = "fov",
+	Default = 90,
+	Min = 0,
+	Max = 180,
+})
+Visuals:AddDropdown({
+	Text = "Weapon",
+	Flag = "weapon",
+	Values = {"AK47", "M4A1", "AWP"},
+	Default = 1,
+})
+Visuals:AddDropdown({
+	Text = "Mode",
+	Flag = "mode",
+	Values = {"Deathmatch", "Competitive", "Casual"},
+	Multi = true,
+})
+
+local OtherTab = Window:AddTab({
+	Text = "Settings",
+})
+local Col3 = OtherTab:AddColumn()
+local Settings = Col3:AddSection("Settings")
+Settings:AddButton({
+	Text = "Unload",
+	Callback = function()
+		Library:Unload()
+	end,
+})
+
+print("UI loaded successfully!")
 
 end
 
